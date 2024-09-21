@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-class ArAnnotation {
+abstract class ArAnnotation {
   ArAnnotation({
     required this.uid,
     required this.position,
