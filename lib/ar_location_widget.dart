@@ -104,7 +104,11 @@ class _ArLocationWidgetState extends State<ArLocationWidget> {
           ArView(
             annotations: widget.annotations,
             annotationViewBuilder: widget.annotationViewBuilder,
-            frame: widget.frame ?? const Size(100, 75),
+            frame: widget.frame ??
+                const Size(
+                  100,
+                  75,
+                ),
             onLocationChange: widget.onLocationChange,
             annotationWidth: widget.annotationWidth,
             annotationHeight: widget.annotationHeight,

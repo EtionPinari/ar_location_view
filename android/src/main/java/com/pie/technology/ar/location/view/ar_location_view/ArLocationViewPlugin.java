@@ -26,6 +26,9 @@ import io.flutter.plugin.common.EventChannel.StreamHandler;
 public class ArLocationViewPlugin implements FlutterPlugin, StreamHandler {
     private static final String TAG = "ArLocationView";
 
+
+    private static final int SENSOR_DELAY_MICROS = 500;
+
     private static final float ALPHA = 0.45f;
 
 

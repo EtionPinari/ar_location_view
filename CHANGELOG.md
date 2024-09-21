@@ -10,6 +10,14 @@
 ## 2.0.0
 
 * Add radar.
+## 1.0.6
+
+* Update dependencies
+* Add permission HIGH_SAMPLING_RATE_SENSORS for Android 12
+
+## 1.0.5
+
+* Update dependencies
 
 ## 1.0.0
 
