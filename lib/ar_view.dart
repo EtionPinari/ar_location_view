@@ -171,7 +171,6 @@ class _ArViewState extends State<ArView> {
           arAnnotations: widget.annotations,
           heading: heading,
           background: widget.backgroundRadar ?? Colors.grey,
-          markerColor: widget.markerColor ?? Colors.red,
         ),
       ),
     );

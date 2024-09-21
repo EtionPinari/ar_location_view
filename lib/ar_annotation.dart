@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-abstract class ArAnnotation {
+class ArAnnotation {
   ArAnnotation({
     required this.uid,
     required this.position,
+    this.markerColor = Colors.red,
     this.azimuth = 0,
     this.distanceFromUser = 0,
     this.isVisible = false,
@@ -19,9 +20,10 @@ abstract class ArAnnotation {
   bool isVisible;
   Offset arPosition;
   Offset arPositionOffset;
+  Color markerColor;
 
   @override
   String toString() {
-    return 'Annotation{position: $position, azimuth: $azimuth, distanceFromUser: $distanceFromUser, isVisible: $isVisible, arPosition: $arPosition}';
+    return 'Annotation{position: $position, markerColor: $markerColor, azimuth: $azimuth, distanceFromUser: $distanceFromUser, isVisible: $isVisible, arPosition: $arPosition}';
   }
 }

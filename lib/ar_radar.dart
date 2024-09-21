@@ -18,13 +18,11 @@ class RadarPainter extends CustomPainter {
     required this.maxDistance,
     required this.arAnnotations,
     required this.heading,
-    required this.markerColor,
     required this.background,
   });
 
   final angle = pi / 7;
 
-  final Color markerColor;
   final Color background;
   final double maxDistance;
   final List<ArAnnotation> arAnnotations;
@@ -69,9 +67,12 @@ class RadarPainter extends CustomPainter {
   void drawMarker(
       Canvas canvas, List<ArAnnotation> annotations, double radius) {
     for (final annotation in annotations) {
-      final Paint paint = Paint()..color = markerColor;
+      final Paint paint = Paint()..color = annotation.markerColor;
       final distanceInRadar =
           annotation.distanceFromUser / maxDistance * radius;
+      if (distanceInRadar > radius) {
+        continue;
+      }
       final alpha = pi - annotation.azimuth.toRadians;
       final dx = (distanceInRadar) * sin(alpha);
       final dy = (distanceInRadar) * cos(alpha);

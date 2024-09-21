@@ -18,7 +18,6 @@ class ArLocationWidget extends StatefulWidget {
     this.accessory,
     this.minDistanceReload = 50,
     this.scaleWithDistance = true,
-    this.markerColor,
     this.backgroundRadar,
     this.radarPosition,
     this.showRadar = true,
@@ -63,9 +62,6 @@ class ArLocationWidget extends StatefulWidget {
 
   ///Scale annotation view with distance from user
   final bool scaleWithDistance;
-
-  /// marker color in radar
-  final Color? markerColor;
 
   ///background radar color
   final Color? backgroundRadar;
@@ -118,7 +114,6 @@ class _ArLocationWidgetState extends State<ArLocationWidget> {
             yOffsetOverlap: widget.yOffsetOverlap,
             minDistanceReload: widget.minDistanceReload,
             scaleWithDistance: widget.scaleWithDistance,
-            markerColor: widget.markerColor,
             backgroundRadar: widget.backgroundRadar,
             radarPosition: widget.radarPosition,
             showRadar: widget.showRadar,
