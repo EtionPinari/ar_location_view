@@ -19,6 +19,7 @@ class RadarPainter extends CustomPainter {
     required this.arAnnotations,
     required this.heading,
     required this.background,
+    this.fovAreaColor = Colors.blueAccent,
   });
 
   final angle = pi / 7;
@@ -27,6 +28,7 @@ class RadarPainter extends CustomPainter {
   final double maxDistance;
   final List<ArAnnotation> arAnnotations;
   final double heading;
+  final Color fovAreaColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -48,8 +50,10 @@ class RadarPainter extends CustomPainter {
     final Paint paint2 = Paint()
       ..shader = RadialGradient(
         colors: [
-          Colors.blueAccent.withAlpha(168),
-          Colors.blueAccent.withAlpha(20),
+          fovAreaColor.withAlpha(168),
+          fovAreaColor.withAlpha(130),
+          fovAreaColor.withAlpha(50),
+          fovAreaColor.withAlpha(20),
         ],
       ).createShader(Rect.fromCircle(
         center: Offset(radius, radius),

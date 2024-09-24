@@ -32,6 +32,7 @@ class ArView extends StatefulWidget {
     this.radarPosition,
     this.showRadar = true,
     this.radarWidth,
+    this.radarFovAreaColor = Colors.blueAccent,
   });
 
   final List<ArAnnotation> annotations;
@@ -70,6 +71,9 @@ class ArView extends StatefulWidget {
 
   ///Radar width
   final double? radarWidth;
+
+  /// Color of area shown on radar to indicate FOV
+  final Color radarFovAreaColor;
 
   @override
   State<ArView> createState() => _ArViewState();
@@ -171,6 +175,7 @@ class _ArViewState extends State<ArView> {
           arAnnotations: widget.annotations,
           heading: heading,
           background: widget.backgroundRadar ?? Colors.grey,
+          fovAreaColor: widget.radarFovAreaColor,
         ),
       ),
     );
@@ -251,6 +256,7 @@ class _ArViewState extends State<ArView> {
       vFov = tempFOv;
       hFov = (2 * atan(tan((vFov / 2).toRadians) * (width / height))).toDegrees;
     }
+
     arStatus.hFov = hFov;
     arStatus.vFov = vFov;
     arStatus.hPixelPerDegree = hFov > 0 ? (width / hFov) : 0;
