@@ -131,11 +131,12 @@ class _ArViewState extends State<ArView> {
                         child: Transform.translate(
                           offset: Offset(0, e.arPositionOffset.dy),
                           child: Transform.scale(
-                            scale: widget.scaleWithDistance
-                                ? 1 -
-                                    (e.distanceFromUser /
-                                        (widget.maxVisibleDistance + 280))
-                                : 1,
+                            scale:
+                                e.scaleWithDistance && widget.scaleWithDistance
+                                    ? 1 -
+                                        (e.distanceFromUser /
+                                            (widget.maxVisibleDistance + 280))
+                                    : 1,
                             child: SizedBox(
                               width: widget.annotationWidth,
                               height: widget.annotationHeight,

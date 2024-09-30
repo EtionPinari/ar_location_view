@@ -11,6 +11,7 @@ abstract class ArAnnotation {
     this.isVisible = false,
     this.arPosition = const Offset(0, 0),
     this.arPositionOffset = const Offset(0, 0),
+    this.scaleWithDistance = true,
   });
 
   String uid;
@@ -21,9 +22,10 @@ abstract class ArAnnotation {
   Offset arPosition;
   Offset arPositionOffset;
   Color markerColor;
+  bool scaleWithDistance;
 
   @override
   String toString() {
-    return 'Annotation{position: $position, markerColor: $markerColor, azimuth: $azimuth, distanceFromUser: $distanceFromUser, isVisible: $isVisible, arPosition: $arPosition}';
+    return 'Annotation{position: $position, markerColor: $markerColor, azimuth: $azimuth, distanceFromUser: $distanceFromUser, isVisible: $isVisible, arPosition: $arPosition, scaleWithDistance: $scaleWithDistance}';
   }
 }

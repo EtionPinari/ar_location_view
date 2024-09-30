@@ -26,6 +26,8 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    namespace = "com.pie.technology.ar.location.view.ar_location_view_example"
+
     compileSdkVersion 34
     compileSdk 34
     ndkVersion flutter.ndkVersion
@@ -40,7 +42,7 @@ android {
         applicationId "com.pie.technology.ar.location.view.ar_location_view_example"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-build-configuration.
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
