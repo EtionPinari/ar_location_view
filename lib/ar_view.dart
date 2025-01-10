@@ -7,8 +7,7 @@ import 'package:native_device_orientation/native_device_orientation.dart';
 import 'ar_location_view.dart';
 
 /// Signature for a function that creates a widget for a given annotation,
-typedef AnnotationViewBuilder = Widget Function(
-    BuildContext context, ArAnnotation annotation);
+typedef AnnotationViewBuilder = Widget Function(BuildContext context, ArAnnotation annotation);
 
 typedef ChangeLocationCallback = void Function(Position position);
 
@@ -112,8 +111,7 @@ class _ArViewState extends State<ArView> {
             _calculateFOV(arSensor.orientation, width, height);
             _updatePosition(arSensor.location!);
             final deviceLocation = arSensor.location!;
-            final annotations = _filterAndSortArAnnotation(
-                widget.annotations, arSensor, deviceLocation);
+            final annotations = _filterAndSortArAnnotation(widget.annotations, arSensor, deviceLocation);
             _transformAnnotation(annotations);
             return Stack(
               children: [
@@ -127,16 +125,13 @@ class _ArViewState extends State<ArView> {
                     (e) {
                       return Positioned(
                         left: e.arPosition.dx,
-                        top: e.arPosition.dy + height * 0.5,
+                        top: e.arPosition.dy + height * 0.25,
                         child: Transform.translate(
                           offset: Offset(0, e.arPositionOffset.dy),
                           child: Transform.scale(
-                            scale:
-                                e.scaleWithDistance && widget.scaleWithDistance
-                                    ? 1 -
-                                        (e.distanceFromUser /
-                                            (widget.maxVisibleDistance + 280))
-                                    : 1,
+                            scale: e.scaleWithDistance && widget.scaleWithDistance
+                                ? 1 - (e.distanceFromUser / (widget.maxVisibleDistance + 1080))
+                                : 1,
                             child: SizedBox(
                               width: widget.annotationWidth,
                               height: widget.annotationHeight,
@@ -149,13 +144,8 @@ class _ArViewState extends State<ArView> {
                   ).toList(),
                 ),
                 if (widget.showRadar)
-                  _radarPosition(
-                      context,
-                      widget.radarPosition ?? RadarPosition.topLeft,
-                      arSensor.heading,
-                      widget.radarWidth != null
-                          ? (widget.radarWidth! * 2)
-                          : width)
+                  _radarPosition(context, widget.radarPosition ?? RadarPosition.topLeft, arSensor.heading,
+                      widget.radarWidth != null ? (widget.radarWidth! * 2) : width)
               ],
             );
           }
@@ -165,8 +155,7 @@ class _ArViewState extends State<ArView> {
     );
   }
 
-  Widget _radarPosition(BuildContext context, RadarPosition position,
-      double heading, double width) {
+  Widget _radarPosition(BuildContext context, RadarPosition position, double heading, double width) {
     final radar = Padding(
       padding: const EdgeInsets.all(8.0),
       child: CustomPaint(
@@ -243,14 +232,12 @@ class _ArViewState extends State<ArView> {
     );
   }
 
-  void _calculateFOV(
-      NativeDeviceOrientation orientation, double width, double height) {
+  void _calculateFOV(NativeDeviceOrientation orientation, double width, double height) {
     double hFov = 0;
     double vFov = 0;
     const tempFOv = 58.0;
 
-    if (orientation == NativeDeviceOrientation.landscapeLeft ||
-        orientation == NativeDeviceOrientation.landscapeRight) {
+    if (orientation == NativeDeviceOrientation.landscapeLeft || orientation == NativeDeviceOrientation.landscapeRight) {
       hFov = tempFOv;
       vFov = (2 * atan(tan((hFov / 2).toRadians) * (height / width))).toDegrees;
     } else {
@@ -264,8 +251,7 @@ class _ArViewState extends State<ArView> {
     arStatus.vPixelPerDegree = vFov > 0 ? (height / vFov) : 0;
   }
 
-  List<ArAnnotation> _visibleAnnotations(
-      List<ArAnnotation> annotations, double heading) {
+  List<ArAnnotation> _visibleAnnotations(List<ArAnnotation> annotations, double heading) {
     final degreesDeltaH = arStatus.hFov;
     return annotations.where((ArAnnotation annotation) {
       final delta = ArMath.deltaAngle(heading, annotation.azimuth);
@@ -276,9 +262,7 @@ class _ArViewState extends State<ArView> {
   }
 
   List<ArAnnotation> _calculateDistanceAndBearingFromUser(
-      List<ArAnnotation> annotations,
-      Position deviceLocation,
-      ArSensor arSensor) {
+      List<ArAnnotation> annotations, Position deviceLocation, ArSensor arSensor) {
     return annotations.map((e) {
       final annotationLocation = e.position;
       e.azimuth = Geolocator.bearingBetween(
@@ -288,34 +272,25 @@ class _ArViewState extends State<ArView> {
         annotationLocation.longitude,
       );
       e.distanceFromUser = Geolocator.distanceBetween(
-          deviceLocation.latitude,
-          deviceLocation.longitude,
-          annotationLocation.latitude,
-          annotationLocation.longitude);
+          deviceLocation.latitude, deviceLocation.longitude, annotationLocation.latitude, annotationLocation.longitude);
       final dy = arSensor.pitch * arStatus.vPixelPerDegree;
-      final dx = ArMath.deltaAngle(e.azimuth, arSensor.heading) *
-          arStatus.hPixelPerDegree;
+      final dx = ArMath.deltaAngle(e.azimuth, arSensor.heading) * arStatus.hPixelPerDegree;
       e.arPosition = Offset(dx, dy);
       return e;
     }).toList();
   }
 
-  List<ArAnnotation> _filterAndSortArAnnotation(List<ArAnnotation> annotations,
-      ArSensor arSensor, Position deviceLocation) {
-    List<ArAnnotation> temps = _calculateDistanceAndBearingFromUser(
-        annotations, deviceLocation, arSensor);
-    temps = annotations
-        .where(
-            (element) => element.distanceFromUser < widget.maxVisibleDistance)
-        .toList();
+  List<ArAnnotation> _filterAndSortArAnnotation(
+      List<ArAnnotation> annotations, ArSensor arSensor, Position deviceLocation) {
+    List<ArAnnotation> temps = _calculateDistanceAndBearingFromUser(annotations, deviceLocation, arSensor);
+    temps = annotations.where((element) => element.distanceFromUser < widget.maxVisibleDistance).toList();
     temps = _visibleAnnotations(temps, arSensor.heading);
     return temps;
   }
 
   void _transformAnnotation(List<ArAnnotation> annotations) {
-    annotations.sort((a, b) => (a.distanceFromUser < b.distanceFromUser)
-        ? -1
-        : ((a.distanceFromUser > b.distanceFromUser) ? 1 : 0));
+    annotations.sort(
+        (a, b) => (a.distanceFromUser < b.distanceFromUser) ? -1 : ((a.distanceFromUser > b.distanceFromUser) ? 1 : 0));
 
     for (final ArAnnotation annotation in annotations) {
       var i = 0;
@@ -324,22 +299,19 @@ class _ArViewState extends State<ArView> {
         if (annotation.uid == annotation2.uid) {
           break;
         }
-        final collision =
-            intersects(annotation, annotation2, widget.annotationWidth);
+        final collision = intersects(annotation, annotation2, widget.annotationWidth);
         if (collision) {
           annotation.arPositionOffset = Offset(
               0,
               annotation2.arPositionOffset.dy -
-                  ((widget.yOffsetOverlap ?? widget.annotationHeight) +
-                      widget.paddingOverlap));
+                  ((widget.yOffsetOverlap ?? widget.annotationHeight) + widget.paddingOverlap));
         }
         i++;
       }
     }
   }
 
-  bool intersects(
-      ArAnnotation annotation1, ArAnnotation annotation2, double width) {
+  bool intersects(ArAnnotation annotation1, ArAnnotation annotation2, double width) {
     return (annotation2.arPosition.dx >= annotation1.arPosition.dx &&
             annotation2.arPosition.dx <= (annotation1.arPosition.dx + width)) ||
         (annotation1.arPosition.dx >= annotation2.arPosition.dx &&

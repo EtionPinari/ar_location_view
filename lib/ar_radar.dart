@@ -74,14 +74,13 @@ class RadarPainter extends CustomPainter {
       final Paint paint = Paint()..color = annotation.markerColor;
       final distanceInRadar =
           annotation.distanceFromUser / maxDistance * radius;
-      if (distanceInRadar > radius) {
-        continue;
+      if (distanceInRadar <= radius) {
+        final alpha = pi - annotation.azimuth.toRadians;
+        final dx = (distanceInRadar) * sin(alpha);
+        final dy = (distanceInRadar) * cos(alpha);
+        final center = Offset(dx + radius, dy + radius);
+        canvas.drawCircle(center, 3, paint);
       }
-      final alpha = pi - annotation.azimuth.toRadians;
-      final dx = (distanceInRadar) * sin(alpha);
-      final dy = (distanceInRadar) * cos(alpha);
-      final center = Offset(dx + radius, dy + radius);
-      canvas.drawCircle(center, 3, paint);
     }
   }
 }

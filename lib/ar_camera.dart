@@ -66,7 +66,7 @@ class _ArCameraViewState extends State<ArCamera> {
         final cameras = await availableCameras();
         controller = CameraController(
           cameras[0],
-          ResolutionPreset.max,
+          ResolutionPreset.ultraHigh,
           enableAudio: false,
         );
         await controller?.initialize();
