@@ -125,7 +125,7 @@ class _ArViewState extends State<ArView> {
                     (e) {
                       return Positioned(
                         left: e.arPosition.dx,
-                        top: e.arPosition.dy + height * 0.25,
+                        top: e.arPosition.dy + height * 0.45,
                         child: Transform.translate(
                           offset: Offset(0, e.arPositionOffset.dy),
                           child: Transform.scale(
