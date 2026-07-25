@@ -23,6 +23,7 @@ class ArLocationWidget extends StatefulWidget {
     this.showRadar = true,
     this.radarWidth,
     this.radarFovAreaColor = Colors.blueAccent,
+    this.onARSensorUpdate,
   });
 
   ///List of POIs
@@ -79,6 +80,8 @@ class ArLocationWidget extends StatefulWidget {
   /// Color of area shown on radar to indicate FOV
   final Color radarFovAreaColor;
 
+  final void Function(ArSensor)? onARSensorUpdate;
+
   @override
   State<ArLocationWidget> createState() => _ArLocationWidgetState();
 }
@@ -123,6 +126,7 @@ class _ArLocationWidgetState extends State<ArLocationWidget> {
             showRadar: widget.showRadar,
             radarWidth: widget.radarWidth,
             radarFovAreaColor: widget.radarFovAreaColor,
+            onARSensorUpdate: widget.onARSensorUpdate,
           ),
         if (initCam && widget.accessory != null) widget.accessory!
       ],

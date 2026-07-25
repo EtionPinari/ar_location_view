@@ -102,7 +102,8 @@ class ArSensorManager {
     _arSensorController.add(arSensor);
   }
 
-  Stream<ArSensor> get arSensor => _arSensorController.stream;
+  Stream<ArSensor> get arSensor =>
+      _arSensorController.stream.asBroadcastStream();
 
   Future<void> _checkLocationPermission() async {
     bool isLocationGranted = await Permission.location.isGranted;
