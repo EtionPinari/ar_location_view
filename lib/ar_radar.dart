@@ -33,21 +33,27 @@ class RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final radius = size.width / 2;
-    final angleView = -(angle + heading.toRadians);
-    final angleView1 = -(-angle + heading.toRadians);
+    final double leftAngle = -angle;
+    final double rightAngle = angle;
     final center = Offset(radius, radius);
-    final Paint paint = Paint()..color = background.withAlpha(100);
-    final Path path = Path();
-    final pointA =
-        Offset(radius * (1 - sin(angleView)), radius * (1 - cos(angleView)));
-    final pointB =
-        Offset(radius * (1 - sin(angleView1)), radius * (1 - cos(angleView1)));
-    path.moveTo(pointA.dx, pointA.dy);
-    path.lineTo(radius, radius);
-    path.lineTo(pointB.dx, pointB.dy);
-    path.arcToPoint(pointA, radius: Radius.circular(radius));
+    final Paint circlePaint = Paint()..color = background.withAlpha(100);
+    canvas.drawCircle(center, radius, circlePaint);
+    final leftPoint = Offset(
+      center.dx + radius * sin(leftAngle),
+      center.dy - radius * cos(leftAngle),
+    );
+    final rightPoint = Offset(
+      center.dx + radius * sin(rightAngle),
+      center.dy - radius * cos(rightAngle),
+    );
+    final Path conePath = Path()
+      ..moveTo(leftPoint.dx, leftPoint.dy)
+      ..lineTo(center.dx, center.dy)
+      ..lineTo(rightPoint.dx, rightPoint.dy)
+      ..arcToPoint(leftPoint, radius: Radius.circular(radius));
+ 
 
-    final Paint paint2 = Paint()
+    final Paint conePaint = Paint()
       ..shader = RadialGradient(
         colors: [
           fovAreaColor.withAlpha(168),
@@ -56,12 +62,12 @@ class RadarPainter extends CustomPainter {
           fovAreaColor.withAlpha(20),
         ],
       ).createShader(Rect.fromCircle(
-        center: Offset(radius, radius),
+        center: center,
         radius: radius,
       ))
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, paint);
-    canvas.drawPath(path, paint2);
+ 
+    canvas.drawPath(conePath, conePaint);
     drawMarker(canvas, arAnnotations, radius);
   }
 
@@ -75,9 +81,9 @@ class RadarPainter extends CustomPainter {
       final distanceInRadar =
           annotation.distanceFromUser / maxDistance * radius;
       if (distanceInRadar <= radius) {
-        final alpha = pi - annotation.azimuth.toRadians;
-        final dx = (distanceInRadar) * sin(alpha);
-        final dy = (distanceInRadar) * cos(alpha);
+        final bearing = (annotation.azimuth - heading).toRadians;
+        final dx = distanceInRadar * sin(bearing);
+        final dy = -distanceInRadar * cos(bearing);
         final center = Offset(dx + radius, dy + radius);
         canvas.drawCircle(center, 3, paint);
       }
