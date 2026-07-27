@@ -24,6 +24,8 @@ class ArLocationWidget extends StatefulWidget {
     this.radarWidth,
     this.radarFovAreaColor = Colors.blueAccent,
     this.onARSensorUpdate,
+    this.bandBottomFraction = 0.40,
+    this.bandTopFraction = 0.80,
   });
 
   ///List of POIs
@@ -82,6 +84,14 @@ class ArLocationWidget extends StatefulWidget {
 
   final void Function(ArSensor)? onARSensorUpdate;
 
+  /// Bottom boundary of the annotation band as a fraction of screen height
+  /// measured from bottom. Default 0.40 = bottom 40% of screen is clear.
+  final double bandBottomFraction;
+
+  /// Top boundary of the annotation band as a fraction of screen height
+  /// measured from bottom. Default 0.80 = top 20% of screen is clear.
+  final double bandTopFraction;
+
   @override
   State<ArLocationWidget> createState() => _ArLocationWidgetState();
 }
@@ -127,6 +137,8 @@ class _ArLocationWidgetState extends State<ArLocationWidget> {
             radarWidth: widget.radarWidth,
             radarFovAreaColor: widget.radarFovAreaColor,
             onARSensorUpdate: widget.onARSensorUpdate,
+            bandBottomFraction: widget.bandBottomFraction,
+            bandTopFraction: widget.bandTopFraction,
           ),
         if (initCam && widget.accessory != null) widget.accessory!
       ],

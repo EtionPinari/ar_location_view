@@ -12,6 +12,8 @@ abstract class ArAnnotation {
     this.arPosition = const Offset(0, 0),
     this.arPositionOffset = const Offset(0, 0),
     this.scaleWithDistance = true,
+    this.isOutsideBand = false,
+    this.altitudeRelativeY = 0.0,
   });
 
   String uid;
@@ -24,8 +26,16 @@ abstract class ArAnnotation {
   Color markerColor;
   bool scaleWithDistance;
 
+  /// Whether this annotation falls outside the configured vertical band.
+  /// When true, a minimal indicator is shown instead of the full widget.
+  bool isOutsideBand;
+
+  /// Normalized altitude-based Y position within the band [0.0, 1.0].
+  /// 0.0 = lowest altitude (lowest on screen), 1.0 = highest altitude (highest on screen).
+  double altitudeRelativeY;
+
   @override
   String toString() {
-    return 'Annotation{position: $position, markerColor: $markerColor, azimuth: $azimuth, distanceFromUser: $distanceFromUser, isVisible: $isVisible, arPosition: $arPosition, scaleWithDistance: $scaleWithDistance}';
+    return 'Annotation{position: $position, markerColor: $markerColor, azimuth: $azimuth, distanceFromUser: $distanceFromUser, isVisible: $isVisible, arPosition: $arPosition, scaleWithDistance: $scaleWithDistance, isOutsideBand: $isOutsideBand}';
   }
 }

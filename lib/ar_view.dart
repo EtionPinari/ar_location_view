@@ -34,6 +34,8 @@ class ArView extends StatefulWidget {
     this.radarWidth,
     this.radarFovAreaColor = Colors.blueAccent,
     this.onARSensorUpdate,
+    this.bandBottomFraction = 0.40,
+    this.bandTopFraction = 0.80,
   });
 
   final List<ArAnnotation> annotations;
@@ -77,6 +79,14 @@ class ArView extends StatefulWidget {
   final Color radarFovAreaColor;
 
   final Function(ArSensor)? onARSensorUpdate;
+
+  /// Bottom boundary of the annotation band as a fraction of screen height
+  /// measured from bottom. Default 0.40 = bottom 40% of screen is clear.
+  final double bandBottomFraction;
+
+  /// Top boundary of the annotation band as a fraction of screen height
+  /// measured from bottom. Default 0.80 = top 20% of screen is clear.
+  final double bandTopFraction;
 
   @override
   State<ArView> createState() => _ArViewState();
@@ -124,7 +134,18 @@ class _ArViewState extends State<ArView> {
             final deviceLocation = arSensor.location!;
             final annotations = _filterAndSortArAnnotation(
                 widget.annotations, arSensor, deviceLocation);
-            _transformAnnotation(annotations);
+
+            // --- Band-constrained annotation positioning ---
+            final topBound = height * (1 - widget.bandTopFraction);
+            final bottomBound = height * (1 - widget.bandBottomFraction);
+            final bandHeight = bottomBound - topBound;
+
+            // Compute altitude-based baseline Y for each annotation
+            _computeAltitudeBaselines(annotations, topBound, bandHeight);
+
+            // Apply collision avoidance within the band
+            _transformAnnotationsInBand(annotations, topBound, bottomBound);
+
             return Stack(
               children: [
                 if (kDebugMode && widget.showDebugInfoSensor)
@@ -135,25 +156,45 @@ class _ArViewState extends State<ArView> {
                 Stack(
                   children: annotations.map(
                     (e) {
+                      // Final Y = pitch offset + altitude baseline + collision offset
+                      final finalTop = e.arPosition.dy + e.arPositionOffset.dy;
+
+                      // Clamp to band bounds
+                      final clampedTop =
+                          finalTop.clamp(topBound, bottomBound - widget.annotationHeight);
+
+                      // Determine if outside band
+                      e.isOutsideBand =
+                          finalTop < topBound || finalTop > bottomBound - widget.annotationHeight;
+
+                      // Build indicator widget or full annotation widget
+                      Widget childWidget;
+                      if (e.isOutsideBand) {
+                        childWidget = _buildBandIndicator(
+                          context,
+                          isAbove: finalTop < topBound,
+                          markerColor: e.markerColor,
+                        );
+                      } else {
+                        childWidget = Transform.scale(
+                          scale:
+                              e.scaleWithDistance && widget.scaleWithDistance
+                                  ? 1 -
+                                      (e.distanceFromUser /
+                                          (widget.maxVisibleDistance + 1080))
+                                  : 1,
+                          child: SizedBox(
+                            width: widget.annotationWidth,
+                            height: widget.annotationHeight,
+                            child: widget.annotationViewBuilder(context, e),
+                          ),
+                        );
+                      }
+
                       return Positioned(
                         left: e.arPosition.dx,
-                        top: e.arPosition.dy + height * 0.45,
-                        child: Transform.translate(
-                          offset: Offset(0, e.arPositionOffset.dy),
-                          child: Transform.scale(
-                            scale:
-                                e.scaleWithDistance && widget.scaleWithDistance
-                                    ? 1 -
-                                        (e.distanceFromUser /
-                                            (widget.maxVisibleDistance + 1080))
-                                    : 1,
-                            child: SizedBox(
-                              width: widget.annotationWidth,
-                              height: widget.annotationHeight,
-                              child: widget.annotationViewBuilder(context, e),
-                            ),
-                          ),
-                        ),
+                        top: clampedTop,
+                        child: childWidget,
                       );
                     },
                   ).toList(),
@@ -172,6 +213,131 @@ class _ArViewState extends State<ArView> {
         }
         return loading();
       },
+    );
+  }
+
+  /// Computes altitude-based baseline Y positions for all annotations.
+  /// Higher altitude annotations are placed higher on screen (lower Y).
+  void _computeAltitudeBaselines(
+      List<ArAnnotation> annotations, double topBound, double bandHeight) {
+    if (annotations.isEmpty) return;
+
+    double minAlt = double.infinity;
+    double maxAlt = double.negativeInfinity;
+
+    for (final a in annotations) {
+      final alt = a.position.altitude;
+      if (alt < minAlt) minAlt = alt;
+      if (alt > maxAlt) maxAlt = alt;
+    }
+
+    final bool allSame = (maxAlt - minAlt).abs() < 0.001;
+
+    for (final a in annotations) {
+      if (allSame) {
+        // All altitudes equal — center in band
+        a.altitudeRelativeY = 0.5;
+      } else {
+        a.altitudeRelativeY =
+            (a.position.altitude - minAlt) / (maxAlt - minAlt);
+      }
+      // Map normalized altitude to band Y position.
+      // altitudeRelativeY=1.0 (highest POI) → topBound (highest on screen)
+      // altitudeRelativeY=0.0 (lowest POI) → topBound + bandHeight - annotationHeight
+      final usableHeight = bandHeight - widget.annotationHeight;
+      a.arPositionOffset = Offset(
+        0,
+        topBound + (1.0 - a.altitudeRelativeY) * usableHeight,
+      );
+    }
+  }
+
+  /// Distributes overlapping annotations bidirectionally within the band.
+  void _transformAnnotationsInBand(List<ArAnnotation> annotations,
+      double topBound, double bottomBound) {
+    annotations.sort((a, b) =>
+        (a.distanceFromUser < b.distanceFromUser)
+            ? -1
+            : ((a.distanceFromUser > b.distanceFromUser) ? 1 : 0));
+
+    // Group overlapping annotations by horizontal X collision
+    final groups = <List<ArAnnotation>>[];
+    for (final annotation in annotations) {
+      bool addedToGroup = false;
+      for (final group in groups) {
+        final collidesWithGroup = group.any((other) =>
+            intersects(annotation, other, widget.annotationWidth));
+        if (collidesWithGroup) {
+          group.add(annotation);
+          addedToGroup = true;
+          break;
+        }
+      }
+      if (!addedToGroup) {
+        groups.add([annotation]);
+      }
+    }
+
+    // Distribute each group vertically within the band
+    final stepSize =
+        (widget.yOffsetOverlap ?? widget.annotationHeight) + widget.paddingOverlap;
+
+    for (final group in groups) {
+      if (group.length == 1) continue; // single annotation — no collision needed
+
+      // Sort group by y position
+      group.sort((a, b) => a.arPositionOffset.dy.compareTo(b.arPositionOffset.dy));
+
+      // Calculate available vertical space in the band for this group
+      final availableSpace = bottomBound - topBound - widget.annotationHeight;
+      final neededSpace = (group.length - 1) * stepSize;
+
+      if (neededSpace <= availableSpace) {
+        // Distribute evenly around the group's center
+        final centerY = group.fold<double>(
+              0, (sum, a) => sum + a.arPositionOffset.dy) /
+            group.length;
+        final halfSpan = (group.length - 1) * stepSize / 2;
+        var currentY = centerY - halfSpan;
+
+        for (final annotation in group) {
+          final clampedY = currentY.clamp(topBound, bottomBound - widget.annotationHeight);
+          annotation.arPositionOffset = Offset(0, clampedY);
+          currentY += stepSize;
+        }
+      } else {
+        // Not enough space — pack as tightly as possible, spread from top
+        var currentY = topBound;
+        for (final annotation in group) {
+          annotation.arPositionOffset = Offset(0, currentY);
+          currentY += stepSize;
+          if (currentY > bottomBound - widget.annotationHeight) break;
+        }
+        // Mark any that couldn't fit as outside band
+        for (final annotation in group) {
+          if (annotation.arPositionOffset.dy > bottomBound - widget.annotationHeight) {
+            annotation.isOutsideBand = true;
+          }
+        }
+      }
+    }
+  }
+
+  /// Builds a small arrow indicator for annotations outside the band.
+  Widget _buildBandIndicator(
+      BuildContext context, {
+        required bool isAbove,
+        required Color markerColor,
+      }) {
+    return Container(
+      width: widget.annotationWidth,
+      height: 32,
+      alignment: Alignment.center,
+      child: Icon(
+        isAbove ? Icons.arrow_drop_down : Icons.arrow_drop_up,
+        size: 32,
+        color: markerColor,
+      ),
     );
   }
 
@@ -320,32 +486,6 @@ class _ArViewState extends State<ArView> {
         .toList();
     temps = _visibleAnnotations(temps, arSensor.heading);
     return temps;
-  }
-
-  void _transformAnnotation(List<ArAnnotation> annotations) {
-    annotations.sort((a, b) => (a.distanceFromUser < b.distanceFromUser)
-        ? -1
-        : ((a.distanceFromUser > b.distanceFromUser) ? 1 : 0));
-
-    for (final ArAnnotation annotation in annotations) {
-      var i = 0;
-      while (i < annotations.length) {
-        final annotation2 = annotations[i];
-        if (annotation.uid == annotation2.uid) {
-          break;
-        }
-        final collision =
-            intersects(annotation, annotation2, widget.annotationWidth);
-        if (collision) {
-          annotation.arPositionOffset = Offset(
-              0,
-              annotation2.arPositionOffset.dy -
-                  ((widget.yOffsetOverlap ?? widget.annotationHeight) +
-                      widget.paddingOverlap));
-        }
-        i++;
-      }
-    }
   }
 
   bool intersects(
