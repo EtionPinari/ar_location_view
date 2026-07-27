@@ -160,40 +160,48 @@ class _ArViewState extends State<ArView> {
                       final finalTop = e.arPosition.dy + e.arPositionOffset.dy;
 
                       // Clamp to band bounds
-                      final clampedTop =
-                          finalTop.clamp(topBound, bottomBound - widget.annotationHeight);
+                      final clampedTop = finalTop.clamp(
+                          topBound, bottomBound - widget.annotationHeight);
 
                       // Determine if outside band
-                      e.isOutsideBand =
-                          finalTop < topBound || finalTop > bottomBound - widget.annotationHeight;
+                      e.isOutsideBand = finalTop < topBound ||
+                          finalTop > bottomBound - widget.annotationHeight;
 
                       // Build indicator widget or full annotation widget
                       Widget childWidget;
+                      double widgetTop;
                       if (e.isOutsideBand) {
                         childWidget = _buildBandIndicator(
                           context,
                           isAbove: finalTop < topBound,
                           markerColor: e.markerColor,
                         );
+                        // Position indicator at the band edge line
+                        // Up arrow (above band) → at topBound
+                        // Down arrow (below band) → at bottomBound - indicator height
+                        const double indicatorHeight = 32.0;
+                        widgetTop = finalTop < topBound
+                            ? topBound
+                            : max(80, bottomBound - indicatorHeight);
                       } else {
                         childWidget = Transform.scale(
-                          scale:
-                              e.scaleWithDistance && widget.scaleWithDistance
-                                  ? 1 -
-                                      (e.distanceFromUser /
-                                          (widget.maxVisibleDistance + 1080))
-                                  : 1,
+                          scale: e.scaleWithDistance && widget.scaleWithDistance
+                              ? 1 -
+                                  (e.distanceFromUser /
+                                      (widget.maxVisibleDistance + 1080))
+                              : 1,
                           child: SizedBox(
                             width: widget.annotationWidth,
                             height: widget.annotationHeight,
                             child: widget.annotationViewBuilder(context, e),
                           ),
                         );
+                        widgetTop = clampedTop;
                       }
 
                       return Positioned(
                         left: e.arPosition.dx,
-                        top: clampedTop,
+                        top: widgetTop,
                         child: childWidget,
                       );
                     },
@@ -253,20 +261,19 @@ class _ArViewState extends State<ArView> {
   }
 
   /// Distributes overlapping annotations bidirectionally within the band.
-  void _transformAnnotationsInBand(List<ArAnnotation> annotations,
-      double topBound, double bottomBound) {
-    annotations.sort((a, b) =>
-        (a.distanceFromUser < b.distanceFromUser)
-            ? -1
-            : ((a.distanceFromUser > b.distanceFromUser) ? 1 : 0));
+  void _transformAnnotationsInBand(
+      List<ArAnnotation> annotations, double topBound, double bottomBound) {
+    annotations.sort((a, b) => (a.distanceFromUser < b.distanceFromUser)
+        ? -1
+        : ((a.distanceFromUser > b.distanceFromUser) ? 1 : 0));
 
     // Group overlapping annotations by horizontal X collision
     final groups = <List<ArAnnotation>>[];
     for (final annotation in annotations) {
       bool addedToGroup = false;
       for (final group in groups) {
-        final collidesWithGroup = group.any((other) =>
-            intersects(annotation, other, widget.annotationWidth));
+        final collidesWithGroup = group.any(
+            (other) => intersects(annotation, other, widget.annotationWidth));
         if (collidesWithGroup) {
           group.add(annotation);
           addedToGroup = true;
@@ -279,14 +286,16 @@ class _ArViewState extends State<ArView> {
     }
 
     // Distribute each group vertically within the band
-    final stepSize =
-        (widget.yOffsetOverlap ?? widget.annotationHeight) + widget.paddingOverlap;
+    final stepSize = (widget.yOffsetOverlap ?? widget.annotationHeight) +
+        widget.paddingOverlap;
 
     for (final group in groups) {
-      if (group.length == 1) continue; // single annotation — no collision needed
+      if (group.length == 1)
+        continue; // single annotation — no collision needed
 
       // Sort group by y position
-      group.sort((a, b) => a.arPositionOffset.dy.compareTo(b.arPositionOffset.dy));
+      group.sort(
+          (a, b) => a.arPositionOffset.dy.compareTo(b.arPositionOffset.dy));
 
       // Calculate available vertical space in the band for this group
       final availableSpace = bottomBound - topBound - widget.annotationHeight;
@@ -294,14 +303,15 @@ class _ArViewState extends State<ArView> {
 
       if (neededSpace <= availableSpace) {
         // Distribute evenly around the group's center
-        final centerY = group.fold<double>(
-              0, (sum, a) => sum + a.arPositionOffset.dy) /
-            group.length;
+        final centerY =
+            group.fold<double>(0, (sum, a) => sum + a.arPositionOffset.dy) /
+                group.length;
         final halfSpan = (group.length - 1) * stepSize / 2;
         var currentY = centerY - halfSpan;
 
         for (final annotation in group) {
-          final clampedY = currentY.clamp(topBound, bottomBound - widget.annotationHeight);
+          final clampedY =
+              currentY.clamp(topBound, bottomBound - widget.annotationHeight);
           annotation.arPositionOffset = Offset(0, clampedY);
           currentY += stepSize;
         }
@@ -315,7 +325,8 @@ class _ArViewState extends State<ArView> {
         }
         // Mark any that couldn't fit as outside band
         for (final annotation in group) {
-          if (annotation.arPositionOffset.dy > bottomBound - widget.annotationHeight) {
+          if (annotation.arPositionOffset.dy >
+              bottomBound - widget.annotationHeight) {
             annotation.isOutsideBand = true;
           }
         }
@@ -325,16 +336,16 @@ class _ArViewState extends State<ArView> {
 
   /// Builds a small arrow indicator for annotations outside the band.
   Widget _buildBandIndicator(
-      BuildContext context, {
-        required bool isAbove,
-        required Color markerColor,
-      }) {
+    BuildContext context, {
+    required bool isAbove,
+    required Color markerColor,
+  }) {
     return Container(
       width: widget.annotationWidth,
       height: 32,
       alignment: Alignment.center,
       child: Icon(
-        isAbove ? Icons.arrow_drop_down : Icons.arrow_drop_up,
+        isAbove ? Icons.arrow_drop_up : Icons.arrow_drop_down,
         size: 32,
         color: markerColor,
       ),
