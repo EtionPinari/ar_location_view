@@ -179,7 +179,7 @@ class _ArViewState extends State<ArView> {
                         // Position indicator at the band edge line
                         // Up arrow (above band) → at topBound
                         // Down arrow (below band) → at bottomBound - indicator height
-                        const double indicatorHeight = 32.0;
+                        const double indicatorHeight = 48.0;
                         widgetTop = finalTop < topBound
                             ? topBound
                             : max(80, bottomBound - indicatorHeight);
@@ -342,11 +342,11 @@ class _ArViewState extends State<ArView> {
   }) {
     return Container(
       width: widget.annotationWidth,
-      height: 32,
+      height: 48.0,
       alignment: Alignment.center,
       child: Icon(
         isAbove ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-        size: 32,
+        size: 48.0,
         color: markerColor,
       ),
     );

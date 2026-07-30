@@ -50,7 +50,7 @@ class RadarPainter extends CustomPainter {
       ..moveTo(leftPoint.dx, leftPoint.dy)
       ..lineTo(center.dx, center.dy)
       ..lineTo(rightPoint.dx, rightPoint.dy)
-      ..arcToPoint(leftPoint, radius: Radius.circular(radius));
+      ..arcToPoint(leftPoint, radius: Radius.circular(radius), clockwise: false);
  
 
     final Paint conePaint = Paint()
