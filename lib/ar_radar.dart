@@ -69,6 +69,7 @@ class RadarPainter extends CustomPainter {
  
     canvas.drawPath(conePath, conePaint);
     drawMarker(canvas, arAnnotations, radius);
+    _drawNorthIndicator(canvas, radius, center);
   }
 
   @override
@@ -88,5 +89,39 @@ class RadarPainter extends CustomPainter {
         canvas.drawCircle(center, 3, paint);
       }
     }
+  }
+
+  void _drawNorthIndicator(Canvas canvas, double radius, Offset center) {
+    final northBearing = -heading.toRadians;
+    final indicatorRadius = radius + 8;
+    // Radial: center → outward. Arrow tip points toward center.
+    final rx = sin(northBearing);
+    final ry = -cos(northBearing);
+    final px = cos(northBearing); // perpendicular
+    final py = sin(northBearing);
+
+    // Tip closest to center, base furthest outward
+    final tipX = center.dx + (indicatorRadius) * rx;
+    final tipY = center.dy + (indicatorRadius) * ry;
+
+    // Stylized arrow:    ^
+    //                   /_\
+    //                  // \\
+    final arrow = Path()
+      ..moveTo(tipX, tipY)
+      ..lineTo(tipX + 4 * rx + 4 * px, tipY + 4 * ry + 4 * py)
+      ..lineTo(tipX + 5 * rx + 4 * px, tipY + 5 * ry + 4 * py)
+      ..lineTo(tipX + 12 * rx + 8 * px, tipY + 12 * ry + 8 * py)
+      ..lineTo(tipX + 12 * rx - 8 * px, tipY + 12 * ry - 8 * py)
+      ..lineTo(tipX + 5 * rx - 4 * px, tipY + 5 * ry - 4 * py)
+      ..lineTo(tipX + 4 * rx - 4 * px, tipY + 4 * ry - 4 * py)
+      ..close();
+
+    canvas.drawPath(
+      arrow,
+      Paint()
+        ..color = Colors.red
+        ..style = PaintingStyle.fill,
+    );
   }
 }
