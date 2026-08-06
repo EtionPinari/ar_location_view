@@ -22,9 +22,9 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion rootProject.ext.compileSdkVersion
     namespace "com.pie.technology.ar.location.view.ar_location_view"
-    compileSdk 34
+    compileSdk rootProject.ext.compileSdkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -32,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 27
+        minSdkVersion rootProject.ext.minSdkVersion
     }
     buildToolsVersion '30.0.3'
 }

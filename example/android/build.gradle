@@ -1,3 +1,10 @@
+// Android SDK versions -- single source of truth
+ext {
+    compileSdkVersion = 36
+    targetSdkVersion = 36
+    minSdkVersion = 27
+}
+
 buildscript {
     ext.kotlin_version = '1.7.10'
     repositories {
